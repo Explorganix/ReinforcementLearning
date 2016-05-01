@@ -5,12 +5,23 @@ using System.Linq;
 
 public class Manager : MonoBehaviour {
 
+    public float alpha;
+    public float gamma;
+    public float delta;
+    public float lambda;
+    public float epsilon;
+    public int foundGold;
+    public int episodesToDo;
+
     public GameObject tile;
     public int worldWidth;
     public int worldHeight;
     public float tileSize;
     public int goldX;
     public int goldY;
+
+
+
 
     public List<int> wallXCoords;
     public List<int> wallYCoords;
@@ -36,17 +47,42 @@ public class Manager : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-        timer += Time.deltaTime;
-        if(timer > .1f)
-        {
-            nextPos = PickNextMove(currentPos);
-            gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.white);
-            currentPos = nextPos;
-            gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.green);
-            timer = 0;
-        }
+
+        
+                timer += Time.deltaTime;
+                if (timer > 0f)
+                {
+                    MovePlayer();
+                    CheckForGold(currentPos);
+                    timer = 0;
+                }
+            
+
 	
 	}
+
+    public void MovePlayer()
+    {
+        nextPos = PickNextMove(currentPos);
+        gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.white);
+        currentPos = nextPos;
+        gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.green);
+    }
+
+    private void CheckForGold(Vector2 currentPos)
+    {
+        if(gridWorld[(int)currentPos.x,(int)currentPos.y].GetComponent<Tile>().GetReward() == 1)
+        {
+            BeginNewEpisose();
+        }
+    }
+
+    private void BeginNewEpisose()
+    {
+        foundGold++;
+        gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.yellow);
+        currentPos = SetStartPosition(worldHeight, worldWidth);
+    }
 
     public void GenerateGridWorld()
     {
@@ -56,18 +92,7 @@ public class Manager : MonoBehaviour {
             {
                 gridWorld[j,i] = (GameObject)Instantiate(tile, new Vector3(tileSize * j, tileSize * i, 0), Quaternion.identity);
                 gridWorld[j, i].GetComponent<Tile>().x = j;
-                gridWorld[j, i].GetComponent<Tile>().y = i;
-
-                
-                if(j == goldX)
-                {
-                    if(i == goldY)
-                    {
-                        //gridWorld[j, i].GetComponent<Tile>().SetColor(Color.yellow);
-                       // gridWorld[j, i].GetComponent<Tile>().SetReward(1);
-                       // wallAndGoldPositions.Add(new Vector2(j, i));
-                    }
-                }  
+                gridWorld[j, i].GetComponent<Tile>().y = i; 
                 //Debug.Log("Tile [" + j + "," + i + "] color is :" + gridWorld[j,i].GetComponent<Tile>().GetColor().ToString());
                 //Debug.Log("Reward : " + gridWorld[j, i].GetComponent<Tile>().reward);
             }
@@ -109,7 +134,7 @@ public class Manager : MonoBehaviour {
         Vector2 pickMove = new Vector2();
         switch (rand)
         {
-            case 0: pickMove = Vector2.up;  ; break;
+            case 0: pickMove = Vector2.up; break;
             case 1: pickMove = Vector2.down; break;
             case 2: pickMove = Vector2.left; break;
             case 3: pickMove = Vector2.right; break;
