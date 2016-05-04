@@ -12,8 +12,10 @@ public class Manager : MonoBehaviour {
     public float epsilon;
     public int foundGold;
     public int episodesToDo;
+    public float stepTime;
 
     public GameObject tile;
+    public GameObject stateTile;
     public int worldWidth;
     public int worldHeight;
     public float tileSize;
@@ -35,12 +37,16 @@ public class Manager : MonoBehaviour {
 
     [SerializeField]
     GameObject[,] gridWorld;
+    GameObject[,] qTable;
 	// Use this for initialization
 	void Start () {
         gridWorld = new GameObject[worldHeight, worldWidth];
         tileSize = tile.GetComponent<SpriteRenderer>().sprite.bounds.size.x;
         GenerateGridWorld();
         currentPos = SetStartPosition(worldHeight, worldWidth);
+
+        qTable = new GameObject[worldHeight, worldWidth];
+        GenerateQTable();
 	}
 
 
@@ -50,7 +56,7 @@ public class Manager : MonoBehaviour {
 
         
                 timer += Time.deltaTime;
-                if (timer > 0f)
+                if (timer > stepTime)
                 {
                     MovePlayer();
                     CheckForGold(currentPos);
@@ -114,6 +120,19 @@ public class Manager : MonoBehaviour {
         }
     }
 
+    public void GenerateQTable()
+    {
+        for (int i = 0; i < worldHeight; i++)
+        {
+            for (int j = 0; j < worldWidth; j++)
+            {
+                qTable[j, i] = (GameObject)Instantiate(stateTile, new Vector3(tileSize * j, tileSize * i, -1), Quaternion.identity);
+                qTable[j, i].GetComponent<State>().x = j;
+                qTable[j, i].GetComponent<State>().y = i;
+            }
+        }
+    }
+
     private Vector2 SetStartPosition(int worldHeight, int worldWidth)
     {
         Vector2 pos = new Vector2(UnityEngine.Random.Range(0, worldHeight), UnityEngine.Random.Range(0, worldWidth));
@@ -130,19 +149,17 @@ public class Manager : MonoBehaviour {
 
     public Vector2 PickNextMove(Vector2 curPos)
     {
-        int rand = UnityEngine.Random.Range(0, 4);
         Vector2 pickMove = new Vector2();
-        switch (rand)
+        float rand = UnityEngine.Random.Range(0, 1f);
+        if(rand > epsilon)
         {
-            case 0: pickMove = Vector2.up; break;
-            case 1: pickMove = Vector2.down; break;
-            case 2: pickMove = Vector2.left; break;
-            case 3: pickMove = Vector2.right; break;
-            default : pickMove = curPos; break;
+            pickMove = ExploreMove(curPos);
         }
-        Debug.Log("pickMove before :" + pickMove.ToString());
-        pickMove += curPos;
-        Debug.Log("pickMove after :" + pickMove.ToString());
+        else
+        {
+            pickMove = ExploitMove(curPos);
+        }
+
 
         if (Enumerable.Range(0, worldWidth).Contains((int)pickMove.x) && Enumerable.Range(0, worldHeight).Contains((int)pickMove.y) && !wallPositions.Contains(pickMove))
         {
@@ -152,5 +169,30 @@ public class Manager : MonoBehaviour {
         {
             return PickNextMove(curPos);
         }
+    }
+
+    Vector2 ExploitMove(Vector2 curPos)
+    {
+        Vector2 pickMove = new Vector2();
+        pickMove = qTable[(int)curPos.x, (int)curPos.y].GetComponent<State>().ExploitMove(curPos);
+        pickMove += curPos;
+        return pickMove;
+    }
+
+    Vector2 ExploreMove(Vector2 curPos)
+    {
+        int rand = UnityEngine.Random.Range(0, 4);
+        Vector2 pickMove = new Vector2();
+        switch (rand)
+        {
+            case 0: pickMove = Vector2.up; break;
+            case 1: pickMove = Vector2.down; break;
+            case 2: pickMove = Vector2.left; break;
+            case 3: pickMove = Vector2.right; break;
+        }
+        //Debug.Log("pickMove before :" + pickMove.ToString());
+        pickMove += curPos;
+        // Debug.Log("pickMove after :" + pickMove.ToString());
+        return pickMove;
     }
 }
