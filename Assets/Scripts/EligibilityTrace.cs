@@ -1,46 +1,90 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
-public class EligibilityTrace {
+public class EligibilityTrace
+{
 
 
-    public float authority;
-    public Vector2 actionTaken;
-    public int x;
-    public int y;
+    public float upAuthority;
+    public float downAuthority;
+    public float leftAuthority;
+    public float rightAuthority;
+    public List<float> moveAuthorties;
+    //public Vector2 actionTaken;
+    //public int x;
+    //public int y;
 
     public EligibilityTrace()
     {
-        authority = 0f;
-        actionTaken = Vector2.zero;
+        upAuthority = 0f;
+        downAuthority = 0f;
+        leftAuthority = 0f;
+        rightAuthority = 0f;
+        moveAuthorties = new List<float>() { upAuthority, downAuthority, leftAuthority, rightAuthority };
     }
 
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
-
-    public void SetActionTaken(Vector2 at)
+    public void SetActionAuthority(Vector2 move)
     {
-        actionTaken = at;
+        if (move == Vector2.up)
+        {
+            upAuthority += 1;
+        }
+        else if (move == Vector2.down)
+        {
+            downAuthority += 1;
+        }
+        else if (move == Vector2.left)
+        {
+            leftAuthority += 1;
+        }
+        else if (move == Vector2.right)
+        {
+            rightAuthority += 1;
+        }
     }
 
-    public Vector2 GetActionTaken()
+    public float GetActionAuthority(Vector2 move)
     {
-        return actionTaken;
+        if (move == Vector2.up)
+        {
+            return upAuthority;
+        }
+        else if (move == Vector2.down)
+        {
+            return downAuthority;
+        }
+        else if (move == Vector2.left)
+        {
+            return leftAuthority;
+        }
+        else if (move == Vector2.right)
+        {
+            return rightAuthority;
+        }
+        else
+        {
+            return 0;
+        }
+
     }
 
-    public void SetAuthority(float auth)
+    public void UpdateAllAuthorities(float gamma, float lambda)
     {
-        authority = auth;
+        for (int i = 0; i < moveAuthorties.Count; i++)
+        {
+            moveAuthorties[i] = (gamma * lambda) * moveAuthorties[i];
+
+            //update each appropriate authority individually
+            switch (i)
+            {
+                case 0: upAuthority = moveAuthorties[i]; break; 
+                case 1: downAuthority = moveAuthorties[i]; break;
+                case 2: leftAuthority = moveAuthorties[i]; break;
+                case 3: rightAuthority = moveAuthorties[i]; break;
+            }
+        }
+
+
     }
 
-    public float GetAuthority()
-    {
-        return authority;
-    }
 }

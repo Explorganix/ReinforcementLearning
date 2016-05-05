@@ -81,9 +81,13 @@ public class Manager : MonoBehaviour
 
             //FindNextAction(currentPos, nextPos);
             UpdateDelta(currentPos, nextReward, nextPos);//updating delta - determining whether the next move will hurt or help
-            UpdateCurrentEligibilityValue(currentPos, lastAction);
-            UpdateEntireQTable(currentPos, lastAction, alpha, delta);
-            UpdateEntireETable(currentPos, lastAction, gamma, lambda);
+
+            UpdateCurrentEligibilityValue(currentPos, lastAction); // update e table value for current spot
+
+            UpdateEntireQTable(lastAction, alpha, delta); //update all q table values in accordance with their trace authority
+
+            UpdateEntireETable(gamma, lambda); //decay all trace authorities
+
 
 
             MovePlayerSprite(currentPos, nextPos);
@@ -101,13 +105,16 @@ public class Manager : MonoBehaviour
 
     }
 
-    private void UpdateEntireETable(Vector2 cPos, Vector2 lAction, float gamma, float lambda)
+    private void UpdateEntireETable(float gamma, float lambda)
     {
 
-           // e[currentPos.authority *= gamma * lambda;
+           foreach(EligibilityTrace e in eTable)
+        {
+            e.UpdateAllAuthorities(gamma, lambda);
+        }
     }
 
-    private void UpdateEntireQTable(Vector2 cPos, Vector2 lAction, float alpha, float delta)
+    private void UpdateEntireQTable(Vector2 lAction, float alpha, float delta)
     {
         foreach(GameObject go in qTable)//for every state in qtable
         {
@@ -115,18 +122,15 @@ public class Manager : MonoBehaviour
             int yCoord = go.GetComponent<State>().y;
 
             foreach (Action act in qTable[xCoord, yCoord].GetComponent<State>().actions)//for every action in that state
-            {
-                if(act.move == eTable[xCoord, yCoord].actionTaken)//only update the reward for the most recent action taken from this state
-                {
-                    act.reward += alpha * delta * eTable[xCoord, yCoord].authority;//update the reward
-                }
+            {               
+                    act.reward += alpha * delta * eTable[xCoord, yCoord].GetActionAuthority(act.move);//update the reward           
             }
         }
     }
 
     private void UpdateCurrentEligibilityValue(Vector2 cPos, Vector2 lAction)
     {
-        eTable[(int)cPos.x, (int)cPos.y].authority += 1; 
+        eTable[(int)cPos.x, (int)cPos.y].SetActionAuthority(lAction);
     }
 
     void UpdatePositionAndAction()
@@ -200,8 +204,8 @@ public class Manager : MonoBehaviour
             for (int j = 0; j < worldWidth; j++)
             {
                 eTable[j, i] = new EligibilityTrace();
-                eTable[j, i].x = j;
-                eTable[j, i].y = i;
+                //eTable[j, i].x = j;
+                //eTable[j, i].y = i;
             }
         }
     }
