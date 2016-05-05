@@ -9,7 +9,7 @@ public class Action {
 
     public Action(Vector2 move, string id)
     {
-        reward = Random.Range(.01f, 1f);//.010f, .100f);
+        reward = Random.Range(.01f, .1f);//.010f, .100f);
         this.move = move;
         this.id = id;
     }

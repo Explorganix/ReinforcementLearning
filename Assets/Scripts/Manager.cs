@@ -14,6 +14,8 @@ public class Manager : MonoBehaviour
     public int foundGold;
     public int episodesToDo;
     public float stepTime;
+    public float epsilonDecayRate;
+    public float maxEpsilonValue;
 
     public GameObject tile;
     public GameObject stateTile;
@@ -150,29 +152,6 @@ public class Manager : MonoBehaviour
         delta = nextStateReward + (gamma * newQReward) - curQReward;
     }
 
-    //string FindNextAction(Vector2 cPos, Vector2 nPos)
-    //{
-    //    Vector2 actionPrime = nPos - cPos;
-    //   //string actionString;
-    //    if(actionPrime == Vector2.up)
-    //    {
-    //        nextActionString = "UP"; 
-    //    }
-    //    else if (actionPrime == Vector2.down)
-    //    {
-    //        nextActionString = "DOWN";
-    //    }
-    //    else if (actionPrime == Vector2.left)
-    //    {
-    //        nextActionString = "LEFT";
-    //    }
-    //    else if (actionPrime == Vector2.right)
-    //    {
-    //        nextActionString = "RIGHT";
-    //    }
-    //    return nextActionString;
-    //}
-
     public void MovePlayerSprite(Vector2 cPos, Vector2 nPos)
     {
 
@@ -192,10 +171,16 @@ public class Manager : MonoBehaviour
     {
         foundGold++;
         gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.yellow);
+        GenerateETable();
+        DecayEpsilon();
         currentPos = SetStartPosition(worldHeight, worldWidth);
+        lastAction = PickNextAction(currentPos);// initialize a
     }
 
-
+    private void DecayEpsilon()
+    {
+        epsilon = Mathf.Clamp(epsilon + epsilonDecayRate, 0, maxEpsilonValue);
+            }
 
     private void GenerateETable()
     {
