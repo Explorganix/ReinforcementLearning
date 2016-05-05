@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 
-public class Manager : MonoBehaviour {
+public class Manager : MonoBehaviour
+{
 
     public float alpha;
     public float gamma;
@@ -21,6 +22,9 @@ public class Manager : MonoBehaviour {
     public float tileSize;
     public int goldX;
     public int goldY;
+    public string nextActionString;//change to scoped variable after dev
+    public string curActionString;//change to scoped variable after dev
+
 
 
 
@@ -34,50 +38,110 @@ public class Manager : MonoBehaviour {
 
     public Vector2 currentPos;
     public Vector2 nextPos;
+    public Vector2 nextAction;
+    public Vector2 lastAction;
+    public int nextReward;
 
     [SerializeField]
     GameObject[,] gridWorld;
     GameObject[,] qTable;
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
         gridWorld = new GameObject[worldHeight, worldWidth];
         tileSize = tile.GetComponent<SpriteRenderer>().sprite.bounds.size.x;
         GenerateGridWorld();
-        currentPos = SetStartPosition(worldHeight, worldWidth);
+
 
         qTable = new GameObject[worldHeight, worldWidth];
         GenerateQTable();
-	}
+
+        currentPos = SetStartPosition(worldHeight, worldWidth);//initialize S
+        lastAction = PickNextAction(currentPos);// initialize a
+    }
 
 
 
     // Update is called once per frame
-    void Update () {
-
-        
-                timer += Time.deltaTime;
-                if (timer > stepTime)
-                {
-                    MovePlayer();
-                    CheckForGold(currentPos);
-                    timer = 0;
-                }
-            
-
-	
-	}
-
-    public void MovePlayer()
+    void Update()
     {
-        nextPos = PickNextMove(currentPos);
-        gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.white);
-        currentPos = nextPos;
-        gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.green);
+
+
+        timer += Time.deltaTime;
+        if (timer > stepTime)
+        {
+            nextPos = currentPos + lastAction;//take action a -> nextPos == S'
+            nextReward = gridWorld[(int)nextPos.x, (int)nextPos.y].GetComponent<Tile>().reward;//observe the reward of S'
+            nextAction = PickNextAction(nextPos);//Choose next action, A', from S' with epsilon greedy
+
+            //FindNextAction(currentPos, nextPos);
+            //UpdateDelta(currentPos, curReward, nextPos);
+            MovePlayerSprite(currentPos, nextPos);
+            UpdatePositionAndAction();
+            CheckForGold(currentPos);
+            timer = 0;
+        }
+
+        foreach (GameObject go in qTable)
+        {
+            go.GetComponent<State>().SetColor(go.GetComponent<State>().color);
+        }
+
+
+
+    }
+
+    void UpdatePositionAndAction()
+    {
+        lastAction.x = nextAction.x;
+        lastAction.y = nextAction.y;
+        currentPos.x = nextPos.x;
+        currentPos.y = nextPos.y;
+    }
+
+    //private void UpdateDelta(Vector2 cPos, int cReward, Vector2 nPos)
+    //{
+    //    string aPrime = FindNextAction(currentPos, nextPos);
+    //    string curAction;
+
+    //    float nReward = qTable[(int)nPos.x, (int)nPos.y].GetComponent<State>().GetActionReward(lastAction); // gets qtable reward from s'
+    //    float nReward = qTable[(int)nPos.x, (int)nPos.y].GetComponent<State>().GetActionReward(lastAction); // gets qtable reward from s'
+    //    delta = curReward + gamma * 
+    //}
+
+    //string FindNextAction(Vector2 cPos, Vector2 nPos)
+    //{
+    //    Vector2 actionPrime = nPos - cPos;
+    //   //string actionString;
+    //    if(actionPrime == Vector2.up)
+    //    {
+    //        nextActionString = "UP"; 
+    //    }
+    //    else if (actionPrime == Vector2.down)
+    //    {
+    //        nextActionString = "DOWN";
+    //    }
+    //    else if (actionPrime == Vector2.left)
+    //    {
+    //        nextActionString = "LEFT";
+    //    }
+    //    else if (actionPrime == Vector2.right)
+    //    {
+    //        nextActionString = "RIGHT";
+    //    }
+    //    return nextActionString;
+    //}
+
+    public void MovePlayerSprite(Vector2 cPos, Vector2 nPos)
+    {
+
+        gridWorld[(int)cPos.x, (int)cPos.y].GetComponent<Tile>().SetColor(Color.white);
+        gridWorld[(int)nPos.x, (int)nPos.y].GetComponent<Tile>().SetColor(Color.green);
     }
 
     private void CheckForGold(Vector2 currentPos)
     {
-        if(gridWorld[(int)currentPos.x,(int)currentPos.y].GetComponent<Tile>().GetReward() == 1)
+        if (gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().GetReward() == 1)
         {
             BeginNewEpisose();
         }
@@ -92,13 +156,13 @@ public class Manager : MonoBehaviour {
 
     public void GenerateGridWorld()
     {
-        for(int i = 0; i < worldHeight; i++)
+        for (int i = 0; i < worldHeight; i++)
         {
-            for(int j = 0; j < worldWidth; j++)
+            for (int j = 0; j < worldWidth; j++)
             {
-                gridWorld[j,i] = (GameObject)Instantiate(tile, new Vector3(tileSize * j, tileSize * i, 0), Quaternion.identity);
+                gridWorld[j, i] = (GameObject)Instantiate(tile, new Vector3(tileSize * j, tileSize * i, 0), Quaternion.identity);
                 gridWorld[j, i].GetComponent<Tile>().x = j;
-                gridWorld[j, i].GetComponent<Tile>().y = i; 
+                gridWorld[j, i].GetComponent<Tile>().y = i;
                 //Debug.Log("Tile [" + j + "," + i + "] color is :" + gridWorld[j,i].GetComponent<Tile>().GetColor().ToString());
                 //Debug.Log("Reward : " + gridWorld[j, i].GetComponent<Tile>().reward);
             }
@@ -116,7 +180,7 @@ public class Manager : MonoBehaviour {
             int y = wallYCoords[k];
             gridWorld[x, y].GetComponent<Tile>().SetColor(Color.black);
             gridWorld[x, y].GetComponent<Tile>().SetReward(-1);
-            wallPositions.Add(new Vector2(x,y));
+            wallPositions.Add(new Vector2(x, y));
         }
     }
 
@@ -147,52 +211,50 @@ public class Manager : MonoBehaviour {
         }
     }
 
-    public Vector2 PickNextMove(Vector2 curPos)
+    public Vector2 PickNextAction(Vector2 curPos)
     {
-        Vector2 pickMove = new Vector2();
+        Vector2 nAction = new Vector2();
         float rand = UnityEngine.Random.Range(0, 1f);
-        if(rand > epsilon)
+        if (rand > epsilon)
         {
-            pickMove = ExploreMove(curPos);
+            nAction = ExploreMove(curPos);
         }
         else
         {
-            pickMove = ExploitMove(curPos);
+            nAction = ExploitMove(curPos);
         }
 
 
-        if (Enumerable.Range(0, worldWidth).Contains((int)pickMove.x) && Enumerable.Range(0, worldHeight).Contains((int)pickMove.y) && !wallPositions.Contains(pickMove))
+        if (Enumerable.Range(0, worldWidth).Contains((int)(nAction.x + curPos.x)) && Enumerable.Range(0, worldHeight).Contains((int)(nAction.y + curPos.y)) && !wallPositions.Contains(nAction + curPos))
         {
-            return pickMove;
+            return nAction;
         }
         else
         {
-            return PickNextMove(curPos);
+            return PickNextAction(curPos);
         }
     }
 
     Vector2 ExploitMove(Vector2 curPos)
     {
-        Vector2 pickMove = new Vector2();
-        pickMove = qTable[(int)curPos.x, (int)curPos.y].GetComponent<State>().ExploitMove(curPos);
-        pickMove += curPos;
-        return pickMove;
+        Vector2 nAction = new Vector2();
+        nAction = qTable[(int)curPos.x, (int)curPos.y].GetComponent<State>().ExploitMove(curPos);
+        return nAction;
     }
 
     Vector2 ExploreMove(Vector2 curPos)
     {
         int rand = UnityEngine.Random.Range(0, 4);
-        Vector2 pickMove = new Vector2();
+        Vector2 nAction = new Vector2();
         switch (rand)
         {
-            case 0: pickMove = Vector2.up; break;
-            case 1: pickMove = Vector2.down; break;
-            case 2: pickMove = Vector2.left; break;
-            case 3: pickMove = Vector2.right; break;
+            case 0: nAction = Vector2.up; break;
+            case 1: nAction = Vector2.down; break;
+            case 2: nAction = Vector2.left; break;
+            case 3: nAction = Vector2.right; break;
         }
-        //Debug.Log("pickMove before :" + pickMove.ToString());
-        pickMove += curPos;
-        // Debug.Log("pickMove after :" + pickMove.ToString());
-        return pickMove;
+        Debug.Log("nAction before :" + nAction.ToString());
+        Debug.Log("nAction after :" + nAction.ToString());
+        return nAction;
     }
 }

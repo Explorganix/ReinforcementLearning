@@ -5,6 +5,9 @@ public class State : MonoBehaviour {
 
     public int x;
     public int y;
+    public SpriteRenderer sprite;
+    public Color color;
+    public float highestActionReward;
 
     public Action up;
     public Action down;
@@ -53,5 +56,50 @@ public class State : MonoBehaviour {
         }    
 
         return bestMove;
+    }
+
+    void Update()
+    {
+        highestActionReward = GetHighestActionReward();
+        color = Color.Lerp(Color.white, Color.red, highestActionReward);
+    }
+
+    float GetHighestActionReward() //colors the state space based on the highest reward out of all the actions available in that state
+    {
+        float highestActionReward = up.reward;
+
+        if (down.reward > highestActionReward)
+        {
+            highestActionReward = down.reward;
+        }
+        if (left.reward > highestActionReward)
+        {
+            highestActionReward = left.reward;
+        }
+
+        if (right.reward > highestActionReward)
+        {
+            highestActionReward = right.reward;
+        }
+        return highestActionReward;
+    }
+
+    public void SetColor(Color col)
+    {
+        Color c = col;
+        sprite.material.color = c;
+    }
+
+    public float GetActionReward(Vector2 action)
+    {
+        float reward = 0;
+        foreach(Action act in actions)
+        {
+            if(act.move == action)
+            {
+                reward = act.GetReward();
+            }
+        }
+        return reward;
     }
 }
