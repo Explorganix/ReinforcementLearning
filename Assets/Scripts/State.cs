@@ -29,7 +29,7 @@ public class State : MonoBehaviour {
     {
         foreach(Action act in actions)
         {
-            Debug.Log("id = " + act.id + ". reward = " + act.reward + ". move = " + act.move.ToString() + ".");
+            //Debug.Log("id = " + act.id + ". reward = " + act.reward + ". move = " + act.move.ToString() + ".");
         }
     }
 

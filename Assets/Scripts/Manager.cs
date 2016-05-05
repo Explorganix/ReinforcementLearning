@@ -45,6 +45,7 @@ public class Manager : MonoBehaviour
     [SerializeField]
     GameObject[,] gridWorld;
     GameObject[,] qTable;
+    EligibilityTrace[,] eTable;
     // Use this for initialization
     void Start()
     {
@@ -56,9 +57,13 @@ public class Manager : MonoBehaviour
         qTable = new GameObject[worldHeight, worldWidth];
         GenerateQTable();
 
+        eTable = new EligibilityTrace[worldHeight, worldWidth];
+        GenerateETable();
+
         currentPos = SetStartPosition(worldHeight, worldWidth);//initialize S
         lastAction = PickNextAction(currentPos);// initialize a
     }
+
 
 
 
@@ -75,7 +80,12 @@ public class Manager : MonoBehaviour
             nextAction = PickNextAction(nextPos);//Choose next action, A', from S' with epsilon greedy
 
             //FindNextAction(currentPos, nextPos);
-            //UpdateDelta(currentPos, curReward, nextPos);
+            UpdateDelta(currentPos, nextReward, nextPos);//updating delta - determining whether the next move will hurt or help
+            UpdateCurrentEligibilityValue(currentPos, lastAction);
+            UpdateEntireQTable(currentPos, lastAction, alpha, delta);
+            UpdateEntireETable(currentPos, lastAction, gamma, lambda);
+
+
             MovePlayerSprite(currentPos, nextPos);
             UpdatePositionAndAction();
             CheckForGold(currentPos);
@@ -91,6 +101,34 @@ public class Manager : MonoBehaviour
 
     }
 
+    private void UpdateEntireETable(Vector2 cPos, Vector2 lAction, float gamma, float lambda)
+    {
+
+           // e[currentPos.authority *= gamma * lambda;
+    }
+
+    private void UpdateEntireQTable(Vector2 cPos, Vector2 lAction, float alpha, float delta)
+    {
+        foreach(GameObject go in qTable)//for every state in qtable
+        {
+            int xCoord = go.GetComponent<State>().x;
+            int yCoord = go.GetComponent<State>().y;
+
+            foreach (Action act in qTable[xCoord, yCoord].GetComponent<State>().actions)//for every action in that state
+            {
+                if(act.move == eTable[xCoord, yCoord].actionTaken)//only update the reward for the most recent action taken from this state
+                {
+                    act.reward += alpha * delta * eTable[xCoord, yCoord].authority;//update the reward
+                }
+            }
+        }
+    }
+
+    private void UpdateCurrentEligibilityValue(Vector2 cPos, Vector2 lAction)
+    {
+        eTable[(int)cPos.x, (int)cPos.y].authority += 1; 
+    }
+
     void UpdatePositionAndAction()
     {
         lastAction.x = nextAction.x;
@@ -99,15 +137,14 @@ public class Manager : MonoBehaviour
         currentPos.y = nextPos.y;
     }
 
-    //private void UpdateDelta(Vector2 cPos, int cReward, Vector2 nPos)
-    //{
-    //    string aPrime = FindNextAction(currentPos, nextPos);
-    //    string curAction;
+    private void UpdateDelta(Vector2 cPos, int nextStateReward, Vector2 nPos)
+    {
 
-    //    float nReward = qTable[(int)nPos.x, (int)nPos.y].GetComponent<State>().GetActionReward(lastAction); // gets qtable reward from s'
-    //    float nReward = qTable[(int)nPos.x, (int)nPos.y].GetComponent<State>().GetActionReward(lastAction); // gets qtable reward from s'
-    //    delta = curReward + gamma * 
-    //}
+        float newQReward = qTable[(int)nPos.x, (int)nPos.y].GetComponent<State>().GetActionReward(nextAction); // gets qtable reward from s'
+        float curQReward = qTable[(int)cPos.x, (int)cPos.y].GetComponent<State>().GetActionReward(lastAction); // gets qtable reward from s'
+        Debug.Log("newQReward: " + newQReward + "- curQReward:" + curQReward + "= delta:" + (nextStateReward + (gamma * newQReward) - curQReward));
+        delta = nextStateReward + (gamma * newQReward) - curQReward;
+    }
 
     //string FindNextAction(Vector2 cPos, Vector2 nPos)
     //{
@@ -152,6 +189,21 @@ public class Manager : MonoBehaviour
         foundGold++;
         gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.yellow);
         currentPos = SetStartPosition(worldHeight, worldWidth);
+    }
+
+
+
+    private void GenerateETable()
+    {
+        for (int i = 0; i < worldHeight; i++)
+        {
+            for (int j = 0; j < worldWidth; j++)
+            {
+                eTable[j, i] = new EligibilityTrace();
+                eTable[j, i].x = j;
+                eTable[j, i].y = i;
+            }
+        }
     }
 
     public void GenerateGridWorld()
@@ -253,8 +305,8 @@ public class Manager : MonoBehaviour
             case 2: nAction = Vector2.left; break;
             case 3: nAction = Vector2.right; break;
         }
-        Debug.Log("nAction before :" + nAction.ToString());
-        Debug.Log("nAction after :" + nAction.ToString());
+        //Debug.Log("nAction before :" + nAction.ToString());
+        //Debug.Log("nAction after :" + nAction.ToString());
         return nAction;
     }
 }

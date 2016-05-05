@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\Action.cs" />
+     <Compile Include="Assets\Scripts\EligibilityTrace.cs" />
      <Compile Include="Assets\Scripts\Manager.cs" />
      <Compile Include="Assets\Scripts\State.cs" />
      <Compile Include="Assets\Scripts\Tile.cs" />
