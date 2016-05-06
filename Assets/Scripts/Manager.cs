@@ -155,8 +155,8 @@ public class Manager : MonoBehaviour
     public void MovePlayerSprite(Vector2 cPos, Vector2 nPos)
     {
 
-        gridWorld[(int)cPos.x, (int)cPos.y].GetComponent<Tile>().SetColor(Color.white);
-        gridWorld[(int)nPos.x, (int)nPos.y].GetComponent<Tile>().SetColor(Color.green);
+        gridWorld[(int)cPos.x, (int)cPos.y].GetComponent<Tile>().SetColor(Color.white, .3f);
+        gridWorld[(int)nPos.x, (int)nPos.y].GetComponent<Tile>().SetColor(Color.green, 1f);
     }
 
     private void CheckForGold(Vector2 currentPos)
@@ -170,7 +170,7 @@ public class Manager : MonoBehaviour
     private void BeginNewEpisose()
     {
         foundGold++;
-        gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.yellow);
+        gridWorld[(int)currentPos.x, (int)currentPos.y].GetComponent<Tile>().SetColor(Color.yellow, 1f);
         GenerateETable();
         DecayEpsilon();
         currentPos = SetStartPosition(worldHeight, worldWidth);
@@ -204,13 +204,14 @@ public class Manager : MonoBehaviour
                 gridWorld[j, i] = (GameObject)Instantiate(tile, new Vector3(tileSize * j, tileSize * i, 0), Quaternion.identity);
                 gridWorld[j, i].GetComponent<Tile>().x = j;
                 gridWorld[j, i].GetComponent<Tile>().y = i;
+                gridWorld[j, i].GetComponent<Tile>().SetColor(Color.white, .3f);
                 //Debug.Log("Tile [" + j + "," + i + "] color is :" + gridWorld[j,i].GetComponent<Tile>().GetColor().ToString());
                 //Debug.Log("Reward : " + gridWorld[j, i].GetComponent<Tile>().reward);
             }
         }
 
         //set gold position
-        gridWorld[goldX, goldY].GetComponent<Tile>().SetColor(Color.yellow);
+        gridWorld[goldX, goldY].GetComponent<Tile>().SetColor(Color.yellow, 1f);
         gridWorld[goldX, goldY].GetComponent<Tile>().SetReward(1);
         goldPosition = new Vector2(goldX, goldY);
 
@@ -219,7 +220,7 @@ public class Manager : MonoBehaviour
         {
             int x = wallXCoords[k];
             int y = wallYCoords[k];
-            gridWorld[x, y].GetComponent<Tile>().SetColor(Color.black);
+            gridWorld[x, y].GetComponent<Tile>().SetColor(Color.black,1f);
             gridWorld[x, y].GetComponent<Tile>().SetReward(-1);
             wallPositions.Add(new Vector2(x, y));
         }
@@ -231,7 +232,7 @@ public class Manager : MonoBehaviour
         {
             for (int j = 0; j < worldWidth; j++)
             {
-                qTable[j, i] = (GameObject)Instantiate(stateTile, new Vector3(tileSize * j, tileSize * i, -1), Quaternion.identity);
+                qTable[j, i] = (GameObject)Instantiate(stateTile, new Vector3(tileSize * j, tileSize * i, 20), Quaternion.identity);
                 qTable[j, i].GetComponent<State>().x = j;
                 qTable[j, i].GetComponent<State>().y = i;
             }
@@ -243,7 +244,7 @@ public class Manager : MonoBehaviour
         Vector2 pos = new Vector2(UnityEngine.Random.Range(0, worldHeight), UnityEngine.Random.Range(0, worldWidth));
         if (gridWorld[(int)pos.x, (int)pos.y].GetComponent<Tile>().reward == 0)
         {
-            gridWorld[(int)pos.x, (int)pos.y].GetComponent<Tile>().SetColor(Color.green);
+            gridWorld[(int)pos.x, (int)pos.y].GetComponent<Tile>().SetColor(Color.green, 1f);
             return pos;
         }
         else

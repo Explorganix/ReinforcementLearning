@@ -27,19 +27,19 @@ public class EligibilityTrace
     {
         if (move == Vector2.up)
         {
-            upAuthority += 1;
+            upAuthority = +1;//try instead of +=1
         }
         else if (move == Vector2.down)
         {
-            downAuthority += 1;
+            downAuthority = +1;//try instead of +=1
         }
         else if (move == Vector2.left)
         {
-            leftAuthority += 1;
+            leftAuthority = +1;//try instead of +=1
         }
         else if (move == Vector2.right)
         {
-            rightAuthority += 1;
+            rightAuthority = +1; //try instead of +=1
         }
     }
 

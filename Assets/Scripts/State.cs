@@ -61,7 +61,18 @@ public class State : MonoBehaviour {
     void Update()
     {
         highestActionReward = GetHighestActionReward();
-        color = Color.Lerp(Color.white, Color.red, highestActionReward);
+        if(highestActionReward < .5f)
+        {
+            color = Color.Lerp(Color.blue, Color.white, 2 * Mathf.Clamp(highestActionReward, 0, .35f));
+        }
+        else if(highestActionReward < 1f)
+        {
+            color = Color.Lerp(Color.white, Color.red, 2 * Mathf.Clamp((highestActionReward % .5f), .15f, .5f));
+        }
+        else
+        {
+            color = Color.red;
+        }
     }
 
     float GetHighestActionReward() //colors the state space based on the highest reward out of all the actions available in that state
